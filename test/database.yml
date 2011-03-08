@@ -1,0 +1,11 @@
+sqlite3:
+  :adapter: sqlite3
+  :database: test/modalfields_plugin.sqlite3.db
+ 
+postgresql:
+  :adapter: postgresql
+  :username: postgres
+  :password: postgres
+  :database:  modalfields_plugin_test
+  :min_messages: ERROR
+  

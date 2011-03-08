@@ -15,21 +15,6 @@
 #
 module ModalFields
   
-  # TODO: tests
-  # TODO: type synonims (timestamp, datetime)
-  # TODO: process specifiers (to add validations for required, etc.)(detect index modifications) decide what to do with multiple-column indices
-  # TODO: refactor into multiple files
-  # TODO: test/adapt to Rails 3
-  # add extensible specifiers:
-  #   ModalFields.specify do
-  #     required do |model, column|
-  #        model.validates_presence_of column.name
-  #     end
-  #     unique do |model, column|
-  #       model.validates_uniqueness_of name, :allow_nil => !column.specifiers.include?(:required)
-  #     end
-  #   end
-  
   SPECIFIERS = [:indexed, :unique, :required]
   COMMON_ATTRIBUTES = {:default=>nil, :null=>true}
   
@@ -71,7 +56,6 @@ module ModalFields
     end
   end
   
-  # TODO: rename hook to... filter? process? declared?  
   class HooksDsl
     def field_type(type, &blk)
       ModalFields.hooks[type.to_sym] = lambda{|model, column_declaration|

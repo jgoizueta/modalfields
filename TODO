@@ -1,0 +1,21 @@
+more tests (update, check)
+
+type synonyms (timestamp, datetime)
+
+process specifiers (to add validations for required, etc.)(detect index modifications) decide what to do with multiple-column indices
+
+refactor into multiple files
+
+add extensible specifiers:
+  ModalFields.specify do
+    required do |model, column|
+       model.validates_presence_of column.name
+    end
+    unique do |model, column|
+      model.validates_uniqueness_of name, :allow_nil => !column.specifiers.include?(:required)
+    end
+  end
+
+rename hook to... filter? process? declared?  transformation?
+
+complete field declaration validation
