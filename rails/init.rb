@@ -1,0 +1,2 @@
+require 'modalfields'
+ModalFields.enable

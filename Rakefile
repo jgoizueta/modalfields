@@ -15,10 +15,12 @@ Jeweler::Tasks.new do |gem|
   gem.name = "modalfields"
   gem.homepage = "http://github.com/jgoizueta/modalfields"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Model annotator with Ruby (Hobo-like) syntax and hooks.}
+  gem.description = %Q{ModelFields is a Rails that adds fields declarations to your models.}
   gem.email = "jgoizueta@gmail.com"
   gem.authors = ["Javier Goizueta"]
+  gem.add_runtime_dependency 'rails', '>= 2.3.0'
+  
   # Include your dependencies below. Runtime dependencies are required when using your gem,
   # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
   #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
