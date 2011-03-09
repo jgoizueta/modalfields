@@ -16,7 +16,7 @@ Jeweler::Tasks.new do |gem|
   gem.homepage = "http://github.com/jgoizueta/modalfields"
   gem.license = "MIT"
   gem.summary = %Q{Model annotator with Ruby (Hobo-like) syntax and hooks.}
-  gem.description = %Q{ModelFields is a Rails that adds fields declarations to your models.}
+  gem.description = %Q{ModelFields is a Rails plugin that adds fields declarations to your models.}
   gem.email = "jgoizueta@gmail.com"
   gem.authors = ["Javier Goizueta"]
   gem.add_runtime_dependency 'rails', '>= 2.3.0'
