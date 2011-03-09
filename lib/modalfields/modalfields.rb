@@ -291,7 +291,7 @@ module ModalFields
                 v==attrs[a] ? nil : v
               }
               col_attrs = attr_keys.map{|a|
-                v = field_declaration.attributes[a]
+                v = column.attributes[a]
                 v==attrs[a] ? nil : v
               }
               if decl_attrs == col_attrs
