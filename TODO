@@ -1,3 +1,5 @@
+either add a generator to clone the rake tasks when used from a gem or look for another solution
+
 type synonyms (timestamp, datetime)
 
 process specifiers (to add validations for required, etc.)(detect index modifications) decide what to do with multiple-column indices
