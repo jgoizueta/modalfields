@@ -26,8 +26,8 @@ class TestDiff< Test::Unit::TestCase
     end
     
     teardown do
-      TestDiff.send(:remove_const, :Author)
-      TestDiff.send(:remove_const, :Book)
+      TestDiff.send(:remove_const, :Author) if defined?(Author)
+      TestDiff.send(:remove_const, :Book) if defined?(Book)
     end
     
   end
@@ -42,14 +42,14 @@ class TestDiff< Test::Unit::TestCase
           number :integer
           birthdate :date
           event :datetime
-          decnum :decimal, :scale=>3
+          decnum :decimal, :precision=>10, :scale=>3
         end
         has_many :books
       end
       class Book < ActiveRecord::Base
         fields do
           title :string
-          price :decimal, :scale=>2
+          price :decimal, :precision=>8, :scale=>2
           code :string, :limit=>4
           comments :text
           timestamps
@@ -58,7 +58,7 @@ class TestDiff< Test::Unit::TestCase
       end
     end
     
-    should "Find not find any changes" do
+    should "not find any changes" do
       new_fields, modified_fields, deleted_fields = ModalFields.send(:diff, Author)
       # assert new_fields.empty?
       # assert modified_fields.empty?
@@ -77,8 +77,8 @@ class TestDiff< Test::Unit::TestCase
     end
     
     teardown do
-      TestDiff.send(:remove_const, :Author)
-      TestDiff.send(:remove_const, :Book)
+      TestDiff.send(:remove_const, :Author) if defined?(Author)
+      TestDiff.send(:remove_const, :Book) if defined?(Book)
     end
     
   end  
@@ -93,14 +93,14 @@ class TestDiff< Test::Unit::TestCase
           birthdate :datetime
           nationality :string
           event :datetime
-          decnum :decimal, :scale=>3
+          decnum :decimal, :precision=>10, :scale=>3
         end
         has_many :books
       end
       class Book < ActiveRecord::Base
         fields do
           title :string
-          price :decimal, :scale=>2
+          price :decimal, :precision=>8, :scale=>2
           code :string, :limit=>5
           timestamps
         end
@@ -119,8 +119,8 @@ class TestDiff< Test::Unit::TestCase
     end
     
     teardown do
-      TestDiff.send(:remove_const, :Author)
-      TestDiff.send(:remove_const, :Book)
+      TestDiff.send(:remove_const, :Author) if defined?(Author)
+      TestDiff.send(:remove_const, :Book) if defined?(Book)
     end
     
   end  
