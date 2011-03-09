@@ -43,3 +43,4 @@ pkg
 
 test/*.db
 test/*.log
+test/app

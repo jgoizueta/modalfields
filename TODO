@@ -1,5 +1,3 @@
-more tests (update, check)
-
 type synonyms (timestamp, datetime)
 
 process specifiers (to add validations for required, etc.)(detect index modifications) decide what to do with multiple-column indices
