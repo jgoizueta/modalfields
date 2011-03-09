@@ -406,7 +406,7 @@ module ModalFields
           pre << "\n"
           start_fields = "  fields do\n"
           end_fields = "  end\n"
-          post.unshift "\n"
+          post.unshift "\n" unless post.first.strip.empty?
           fields = []
         end
         [pre,start_fields,fields,end_fields,post]
