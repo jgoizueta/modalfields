@@ -151,14 +151,6 @@ module ModalFields
         #   extend FieldDeclarationClassMethods          
         # end
         ::ActiveRecord::Base.send :extend, FieldDeclarationClassMethods
-        # load rake tasks
-        if File.exists?('Rakefile')
-          load 'Rakefile'
-          Dir[File.join(File.dirname(__FILE__), '../tasks', '**/*.rake')].each { |rake| load rake }
-          return true
-        else
-          return false
-        end
       end
     end
     
