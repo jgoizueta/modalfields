@@ -7,7 +7,7 @@ class Author < ActiveRecord::Base
       xxxx :string
       birthdate :integer, :unique # specifications...
     # etc.
-    decnum :decimal, :precision=>11, :scale=>3
+    decnum :decimal, :default=>BigDecimal('1.2'), :precision=>11, :scale=>3
     eventx :datetime
   }
 

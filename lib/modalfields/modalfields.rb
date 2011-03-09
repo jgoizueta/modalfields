@@ -40,7 +40,13 @@ module ModalFields
     def to_s
       code = "#{name} :#{type}"
       code << ", "+specifiers.inspect[1...-1] unless specifiers.empty?
-      code << ", "+attributes.inspect[1...-1] unless attributes.empty?
+      unless attributes.empty?
+        code << ", "+attributes.keys.sort_by{|attr| attr.to_s}.map{|attr|
+          v = attributes[attr]
+          v = v.kind_of?(BigDecimal) ? "BigDecimal('#{v.to_s}')" : v.inspect
+          ":#{attr}=>#{v}"
+        }*", "
+      end
       code
     end
     

@@ -4,7 +4,7 @@ ActiveRecord::Schema.define(:version => 0) do
     t.integer :number
     t.date :birthdate
     t.datetime :event
-    t.decimal :decnum, :precision=>10,  :scale=>3
+    t.decimal :decnum, :precision=>10,  :scale=>3, :default=>BigDecimal('1.2')
   end
   create_table :books, :force => true do |t|
     t.integer :author_id

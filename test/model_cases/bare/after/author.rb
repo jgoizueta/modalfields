@@ -5,7 +5,7 @@ class Author < ActiveRecord::Base
     number :integer
     birthdate :date
     event :datetime
-    decnum :decimal, :precision=>10, :scale=>3
+    decnum :decimal, :default=>BigDecimal('1.2'), :precision=>10, :scale=>3
   end
 
   has_many :books
