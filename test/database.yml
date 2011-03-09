@@ -1,6 +1,6 @@
 sqlite3:
   :adapter: sqlite3
-  :database: test/modalfields_plugin.sqlite3.db
+  :database: modalfields_plugin.sqlite3.db
  
 postgresql:
   :adapter: postgresql

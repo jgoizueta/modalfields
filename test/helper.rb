@@ -13,6 +13,8 @@ require 'active_support'
 require 'active_record'
 require 'logger'
 
+require 'active_support/core_ext/hash'
+
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'modalfields'
@@ -26,10 +28,13 @@ ENV['RAILS_ROOT'] ||= File.dirname(__FILE__) # + '/../../../..'
 # require File.expand_path(File.join(ENV['RAILS_ROOT'], 'config/environment.rb'))
 
 module Rails
+  def self.root
+    ENV['RAILS_ROOT']
+  end
 end
  
 def load_schema
-  config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
+  config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml')).with_indifferent_access
   ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
  
   db_adapter = ENV['DB']
