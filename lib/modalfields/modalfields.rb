@@ -147,10 +147,7 @@ module ModalFields
     # Enable the ModalFields plugin (adds the fields declarator to model classes)
     def enable
       if defined?(::Rails)        
-        # class ::ActiveRecord::Base
-        #   extend FieldDeclarationClassMethods          
-        # end
-        ::ActiveRecord::Base.send :extend, FieldDeclarationClassMethods
+        ::ActiveRecord::Base.extend FieldDeclarationClassMethods
       end
     end
     
