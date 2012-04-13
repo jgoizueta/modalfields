@@ -90,8 +90,8 @@ Currently they're not avaible if the plugin is installed as a gem.
   end
 
 
-  # Example: coded fields
-  #   coded :numeric_code, :values=>{1=>:one, 2=>:two}
+  # Example: enum fields
+  #   enum :numeric_code, :values=>{1=>:one, 2=>:two}
   ModalFields.hook do
 
     # Defines a field with integer codes which are associated with descriptions and optionally
