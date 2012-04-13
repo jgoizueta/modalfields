@@ -37,6 +37,11 @@ module ModalFields
       self
     end
     
+    def add!(attrs)
+      self.attributes.merge! attrs
+      self
+    end
+    
     def to_s
       code = "#{name} :#{type}"
       code << ", "+specifiers.inspect[1...-1] unless specifiers.empty?
@@ -147,7 +152,10 @@ module ModalFields
     # Enable the ModalFields plugin (adds the fields declarator to model classes)
     def enable
       if defined?(::Rails)
-        ::ActiveRecord::Base.extend FieldDeclarationClassMethods
+        # class ::ActiveRecord::Base
+        #   extend FieldDeclarationClassMethods
+        # end
+        ::ActiveRecord::Base.send :extend, FieldDeclarationClassMethods
       end
     end
     
@@ -253,7 +261,8 @@ module ModalFields
       #   declarations.
       # * deleted_fields are fields declared in the fields block but not present in the current schema.
       def diff(model)
-        existing_fields = model.columns
+        # model.columns will fail if the table does not exist
+        existing_fields = model.columns rescue []
         association_fields = model.reflect_on_all_associations(:belongs_to).map(&:primary_key_name).flatten.map(&:to_s)
         pk_fields = Array(model.primary_key).map(&:to_s)
         case show_primary_keys

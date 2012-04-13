@@ -14,9 +14,9 @@ from the DB schema. But the annotations are syntactic Ruby as in HoboFields rath
   end
 
 Apart from looking prettier to my eyes, this allows triggering special functionality 
-from the field declations (such as specifying validations).
+from the field declarations (such as specifying validations).
 
-Fields that are foreing_keys of belongs_to associations are not annotated; it is assumed that
+Fields that are foreign_keys of belongs_to associations are not annotated; it is assumed that
 belongs_to and other associations follow the fields block declaration, so the information
 is readily available.
 
@@ -32,7 +32,7 @@ Custom type fields and hooks can be define in files (e.g. fields.rb) in config/i
 There's a couple of Rake tasks:
 * fields:update is what's called after a migration; it updates the fields blocks in the model class definitions.
 * fields:check shows the difference between the declared fields and the DB schema (what would be modified by fields:update)
-Currently they're not avaible if the plugin is installed as a gem.
+Currently they're not available if the plugin is installed as a gem.
 
 
 == Some customization examples:
@@ -41,7 +41,7 @@ Currently they're not avaible if the plugin is installed as a gem.
   
     # Declare serialized fields as
     #  field_name :serialized, :class=>Array
-    # another optionn would be: (using the generic hook)
+    # another option would be: (using the generic hook)
     #  field_name :text, :serialize=>Array
     serialized do |model, declaration|
       model.serialize declaration.name, declaration.attributes[:class].class || Object
@@ -79,63 +79,48 @@ Currently they're not avaible if the plugin is installed as a gem.
   end
 
   ModalFields.define do
-    point               :srid=>nil, :with_z=>false, :with_m=>false
-    line_string         :srid=>nil, :with_z=>false, :with_m=>false
-    polygon             :srid=>nil, :with_z=>false, :with_m=>false
-    geometry_collection :srid=>nil, :with_z=>false, :with_m=>false
-    multi_point         :srid=>nil, :with_z=>false, :with_m=>false
-    multi_line_string   :srid=>nil, :with_z=>false, :with_m=>false
-    multi_polygon       :srid=>nil, :with_z=>false, :with_m=>false
-    geometry            :srid=>nil, :with_z=>false, :with_m=>false
+    point               :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'POINT'
+    line_string         :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'LINESTRING'
+    polygon             :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'POLYGON'
+    geometry_collection :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'GEOMETRYCOLLECTION'
+    multi_point         :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'MULTIPOINT'
+    multi_line_string   :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'MULTILINESTRING'
+    multi_polygon       :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>'MULTIPOLYGON'
+    geometry            :srid=>nil, :with_z=>false, :with_m=>false, :sql_type=>nil
   end
 
-
-  # Example: enum fields
-  #   enum :numeric_code, :values=>{1=>:one, 2=>:two}
   ModalFields.hook do
-
-    # Defines a field with integer codes which are associated with descriptions and optionally
-    # with symbolic names. Constants for the codes are defined with the capitalized symbolic name.
-    # Also a mapping from the codes to the symbolic names is stored in an CODIGOS_... constant and
-    # is accesible by a ..._codigo class method.
-    # Use:
-    #   coded :name, :values=>{1=>[:first_symbol, 'First description'],...
-    # or (automatic descriptions from symbolic names)
-    #   coded :name, :values=>{1=>:first, 2=>:second,...
-    # or (no constants defined))
-    #   coded :name, :values=>{1=>'First', 2=>'Second'
-    #
-    # A model's class method, campo_codificado is used to the define the support methods for the field
-    #
-    coded do |model, declaration|
-      descriptions = {}  # map from codes to descriptions
-      symbols = {}       # map codes to symbols, to be stored in CODIGOS_... constant
-      values = declaration.attributes[:values]
-      values.each_pair do |code, symbol_descr|
-        symbol,descr = symbol_descr
-        if symbol.is_a?(String) && descr.nil?
-          descr = symbol
-        else
-          descr ||= symbol.to_s.humanize
-          model.const_set symbol.to_s.upcase, code
-          symbols[code] = symbol
-        end
-        descriptions[code] = descr
+    %w{point line_string polygon geometry_collection multi_point multi_line_string multi_polygon}.each do |spatial_type|
+      field_type spatial_type.to_sym do |model, declaration|
+        declaration.replace!(:type=>:geometry).add!(:sql_type=>spatial_type.upcase.tr('_',''))
       end
-      declaration.replace!(:type=>:integer).remove_attributes!(:values)
-      col = declaration.name
-      model.campo_codificado col, descriptions
-      unless symbols.empty?
-        model.const_set "CODIGOS_#{col}", symbols
-        mc = class <<model;self;end
-        mc.instance_eval do
-          define_method "#{col}_codigo" do |valor_codigo|
-            const_get("CODIGOS_#{col}")[valor_codigo]
-          end
-        end
-      end
-    end 
+    end
   end
+
+
+  # Enumerated field with symbolic constants associated (and translated literals) using the enum_id plugin
+  # Use:
+  #   enum :name, :values=>{id1=>:first_symbol, id2=>:second_symbol, ...}
+  # Or: (ids are sequential values starting in 1)
+  #  enum :name, :values=>[:first_symbol, :second_symbol, ...]
+  ModalFields.hook do
+    enum do |model, declaration|
+      values = declaration.attributes[:values]
+      if values.kind_of?(Array)
+        values = (1..values.size).map_hash{|i| values[i-1]}
+      end
+      model.enum_id declaration.name, values
+      declaration.replace! :type=>:integer, :name=>"#{declaration.name}_id"
+    end
+
+    class ModalFields::Declaration
+      def enum(*values)
+        values = values.first if values.size==1 && values.first.kind_of?(Hash)
+        {:values=>values}
+      end
+    end
+  end
+
 
 == Copyright
 
