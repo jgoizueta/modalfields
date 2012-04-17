@@ -13,7 +13,7 @@ from the DB schema. But the annotations are syntactic Ruby as in HoboFields rath
     end
   end
 
-Apart from looking prettier to my eyes, this allows triggering special functionality 
+Apart from looking prettier to my eyes, this allows triggering special functionality
 from the field declarations (such as specifying validations).
 
 Fields that are foreign_keys of belongs_to associations are not annotated; it is assumed that
@@ -38,7 +38,7 @@ Currently they're not available if the plugin is installed as a gem.
 == Some customization examples:
 
   ModalFields.hook do
-  
+
     # Declare serialized fields as
     #  field_name :serialized, :class=>Array
     # another option would be: (using the generic hook)
@@ -47,21 +47,21 @@ Currently they're not available if the plugin is installed as a gem.
       model.serialize declaration.name, declaration.attributes[:class].class || Object
       declaration.replace!(:type=>:text).remove_attributes!(:class)
     end
-  
+
     # Add specific support for date fields (_ui virtual attributes)
     date do |model, declaration|
       model.date_ui declaration.name
     end
-  
+
     # Add specific support for date and datetime and detect fields with units
     all_fields do |model, declaration|
       date_ui name if [:date, :datetime].include?(declaration.type)
       if ModalSupport::Units.valid_units?(units = declaration.name.to_s.split('_').last)
-        prec = {'m'=>1, 'mm'=>0, 'cm'=>0, 'km'=>3}[units] || 0      
+        prec = {'m'=>1, 'mm'=>0, 'cm'=>0, 'km'=>3}[units] || 0
         magnitude_ui name, prec, units
       end
     end
-  
+
   end
 
   # Spatial Adapter columns: require specific column to declaration conversion and field types
@@ -72,7 +72,7 @@ Currently they're not available if the plugin is installed as a gem.
     attributes = {}
     attrs = ModalFields.definitions[type]
     attrs.keys.each do |attr|
-      v = column.send(attr)          
+      v = column.send(attr)
       attributes[attr] = v unless attrs[attr]==v
     end
     ModalFields::FieldDeclaration.new(column.name.to_sym, type, [], attributes)

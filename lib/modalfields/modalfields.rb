@@ -3,7 +3,7 @@
 # It works like other annotators, by updating the model annotations from the DB schema.
 # But the annotations are syntactic Ruby as in HoboFields rather than comments.
 #
-# Apart from looking better to my eyes, this allows triggering special functionality 
+# Apart from looking better to my eyes, this allows triggering special functionality
 # from the field declations (such as specifying validations).
 #
 # The annotations are kept up to date by the migration tasks.
@@ -14,34 +14,34 @@
 # Custom type fields and hooks can be define in files (e.g. fields.rb) in config/initializers/
 #
 module ModalFields
-  
+
   SPECIFIERS = [:indexed, :unique, :required]
   COMMON_ATTRIBUTES = {:default=>nil, :null=>true}
-  
+
   class FieldDeclaration < Struct.new(:name, :type, :specifiers, :attributes)
-    
+
     def self.declare(name, type, *args)
       attributes = args.extract_options!
       new(name, type, args, attributes)
     end
-    
+
     def replace!(replacements={})
       replacements.each_pair do |key, value|
         self[key] = value
       end
       self
     end
-    
+
     def remove_attributes!(*attrs)
       self.attributes = self.attributes.except(*attrs)
       self
     end
-    
+
     def add!(attrs)
       self.attributes.merge! attrs
       self
     end
-    
+
     def to_s
       code = "#{name} :#{type}"
       code << ", "+specifiers.inspect[1...-1] unless specifiers.empty?
@@ -54,10 +54,10 @@ module ModalFields
       end
       code
     end
-    
+
   end
-  
-  
+
+
   class DefinitionsDsl
     def field(name, attributes={})
       ModalFields.definitions[name.to_sym] = COMMON_ATTRIBUTES.merge(attributes)
@@ -66,7 +66,7 @@ module ModalFields
       field(name, *args)
     end
   end
-  
+
   class HooksDsl
     def field_type(type, &blk)
       ModalFields.hooks[type.to_sym] = lambda{|model, column_declaration|
@@ -95,7 +95,7 @@ module ModalFields
       end
       if ModalFields.validate(declaration)
         @model.fields_info << declaration
-      end      
+      end
     end
     def timestamps
       field :created_at, :datetime
@@ -117,14 +117,14 @@ module ModalFields
         end
       end
       DeclarationsDsl.new(self).instance_eval(&blk)
-    end    
+    end
   end
 
   @show_primary_keys = false
   @hooks = {}
   @definitions = {}
   @column_to_field_declaration_hook = nil
-  
+
   class <<self
     attr_reader :hooks, :definitions
     # Define declaration of primary keys
@@ -133,22 +133,22 @@ module ModalFields
     #   ModalFields.show_primary_keys = :id   # only declare if named 'id' (otherwise the model will have a primary_key declaration)
     #   ModalFields.show_primary_keys = :except_id   # only declare if named differently from 'id'
     attr_accessor :show_primary_keys
-    
+
     # Run a definition block that executes field type definitions
     def define(&blk)
       DefinitionsDsl.new.instance_eval(&blk)
     end
-    
+
     # Run a hooks block that defines field declaration processors
     def hook(&blk)
       HooksDsl.new.instance_eval(&blk)
     end
-    
+
     # Define a custom column to field declaration conversion
     def column_to_field_declaration(&blk)
       @column_to_field_declaration_hook = blk
     end
-    
+
     # Enable the ModalFields plugin (adds the fields declarator to model classes)
     def enable
       if defined?(::Rails)
@@ -158,7 +158,7 @@ module ModalFields
         ::ActiveRecord::Base.send :extend, FieldDeclarationClassMethods
       end
     end
-    
+
     # Update the field declarations of all the models.
     # This modifies the source files of all the models (touches only the fields block or adds one if not present).
     # It is recommended to run this on a clearn working directory (no uncommitted changes), so that the
@@ -186,7 +186,7 @@ module ModalFields
             with_timestamps = true
             new_fields -= [created_at, updated_at]
           end
-          fields += new_fields.map{|f| 
+          fields += new_fields.map{|f|
             comments = pk_names.include?(f.name.to_s) ? " \# PK" : ""
             ["    #{f}#{comments}\n" ]
           }
@@ -196,7 +196,7 @@ module ModalFields
         end
       end
     end
-    
+
     def check
       dbmodels.each do |model, file|
         new_fields, modified_fields, deleted_fields = diff(model)
@@ -211,7 +211,7 @@ module ModalFields
         end
       end
     end
-    
+
     def validate(declaration)
       definition = definitions[declaration.type.to_sym]
       raise "Field type #{declaration.type} not defined" unless definition
@@ -219,9 +219,9 @@ module ModalFields
       # TODO: validate declaration.attributes with definition
       true
     end
-    
+
     private
-    
+
       # return ActiveRecord classes corresponding to tables, without STI derived classes, but including indirectly
       # derived classes that do have their own tables (to achieve this we use the convention that in such cases
       # the base class, directly derived from ActiveRecord::Base has a nil table_name)
@@ -232,11 +232,11 @@ module ModalFields
                    .reject{|c,f| has_table(c.superclass)}
         models.uniq
       end
-      
+
       def has_table(cls)
         (cls!=ActiveRecord::Base) && cls.respond_to?(:table_name) && !cls.table_name.blank?
       end
-      
+
       def map_column_to_field_declaration(column)
         if @column_to_field_declaration_hook
           @column_to_field_declaration_hook[column]
@@ -245,13 +245,13 @@ module ModalFields
           attributes = {}
           attrs = definitions[type]
           attrs.keys.each do |attr|
-            v = column.send(attr)          
+            v = column.send(attr)
             attributes[attr] = v unless attrs[attr]==v
           end
           FieldDeclaration.new(column.name.to_sym, type, [], attributes)
         end
       end
-      
+
       # Compare the declared fields of a model (in the fields block) to the actual model columns (in the schema).
       # returns the difference as [new_fields, modified_fields, deleted_fields]
       # where:
@@ -272,7 +272,7 @@ module ModalFields
           pk_fields = pk_fields.reject{|pk| pk=='id'}
         when :except_id
           pk_fields = pk_fields.select{|pk| pk=='id'}
-        end      
+        end
         if model.respond_to?(:fields_info)
           declared_fields = model.fields_info
           indices = model.connection.indexes(model.table_name) # name, columns, unique, spatial
@@ -298,7 +298,7 @@ module ModalFields
             if field_declaration.type.to_sym == column.type.to_sym
               attrs = definitions[column.type.to_sym]
               attr_keys = attrs.keys
-              decl_attrs = attr_keys.map{|a| 
+              decl_attrs = attr_keys.map{|a|
                 v = field_declaration.attributes[a]
                 v==attrs[a] ? nil : v
               }
@@ -325,14 +325,14 @@ module ModalFields
           attributes = {}
           attrs = definitions[f.type.to_sym]
           attrs.keys.each do |attr|
-            v = f.send(attr)          
+            v = f.send(attr)
             attributes[attr] = v unless attrs[attr]==v
           end
           FieldDeclaration.new(f.name.to_sym, f.type.to_sym, [], attributes)
         }
         [new_fields, modified_fields, deleted_fields]
-      end        
-      
+      end
+
       # Break up the lines of a model definition file into sections delimited by the fields declaration.
       # An empty fields declaration is added to the result if none is present in the file.
       # The split result is an array with these elements:
@@ -397,7 +397,7 @@ module ModalFields
           i = 0
           (0...pre.size).each do |i|
             break if pre[i] =~ /^\s*class\b/
-          end 
+          end
           raise "No se ha encontrado la declaración del modelo en #{file}" unless i<pre.size
           post = pre[i+1..-1]
           pre = pre[0..i]
@@ -409,7 +409,7 @@ module ModalFields
         end
         [pre,start_fields,fields,end_fields,post]
       end
-      
+
       # Write a model definition file from its broken up parts
       def join_model_file(output_file, pre, start_fields, fields, end_fields, post)
         File.open(output_file,"w"){ |output|
@@ -420,10 +420,10 @@ module ModalFields
           output.write post
         }
       end
-      
+
 
     end
 
 
-    
+
 end

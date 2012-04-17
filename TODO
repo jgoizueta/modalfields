@@ -31,7 +31,7 @@ Installation:
   script/plugin install git://github.com/jgoizueta/modalfields.git
   Rails 3
   rails plugin install git://github.com/jgoizueta/modalfields.git
-  
+
   # load rake tasks
   if File.exists?('Rakefile')
     load 'Rakefile'
