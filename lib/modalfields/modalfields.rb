@@ -398,7 +398,7 @@ module ModalFields
           (0...pre.size).each do |i|
             break if pre[i] =~ /^\s*class\b/
           end
-          raise "No se ha encontrado la declaración del modelo en #{file}" unless i<pre.size
+          raise "Model declaration not found in #{file}" unless i<pre.size
           post = pre[i+1..-1]
           pre = pre[0..i]
           pre << "\n"
