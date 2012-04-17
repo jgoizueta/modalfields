@@ -413,14 +413,13 @@ module ModalFields
       # Write a model definition file from its broken up parts
       def join_model_file(output_file, pre, start_fields, fields, end_fields, post)
         File.open(output_file,"w"){ |output|
-          output.write pre
+          output.write pre*""
           output.write start_fields
-          output.write fields.map{|f| f.first}
+          output.write fields.map{|f| f.first}*""
           output.write end_fields
-          output.write post
+          output.write post*""
         }
       end
-
 
     end
 
