@@ -29,11 +29,15 @@ block start and end...)
 
 Custom type fields and hooks can be define in files (e.g. fields.rb) in config/initializers/
 
+== Rake Tasks
+
 There's a couple of Rake tasks:
 * fields:update is what's called after a migration; it updates the fields blocks in the model class definitions.
 * fields:check shows the difference between the declared fields and the DB schema (what would be modified by fields:update)
-Currently they're not available if the plugin is installed as a gem.
 
+Under Rails 2, you need to add this to your Rakefile to make the tasks available:
+
+  require 'modalfields'
 
 == Some customization examples:
 

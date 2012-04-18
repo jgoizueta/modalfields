@@ -1,5 +1,3 @@
-either add a generator to clone the rake tasks when used from a gem or look for another solution (make it an engine?)
-
 type synonyms (timestamp, datetime)
 
 process specifiers (to add validations for required, etc.)(detect index modifications) decide what to do with multiple-column indices
@@ -26,18 +24,10 @@ of extra attributes)
 instead of
   status :enum_field, :required, :values=>[:draft, :approved, :published]
 
-Installation:
+Vendorized Installation:
   Rails 2
   script/plugin install git://github.com/jgoizueta/modalfields.git
   Rails 3
   rails plugin install git://github.com/jgoizueta/modalfields.git
 
-  # load rake tasks
-  if File.exists?('Rakefile')
-    load 'Rakefile'
-    Dir[File.join(File.dirname(__FILE__), '../tasks', '**/*.rake')].each { |rake| load rake }
-    return true
-  else
-    return false
-  end
 
