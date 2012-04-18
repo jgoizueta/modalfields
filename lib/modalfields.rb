@@ -8,7 +8,6 @@ if defined?(Rails)
         Dir[File.join(File.dirname(__FILE__), 'tasks', '**/*.rake')].each { |f| load f }
       end
     end
-  else
-    Dir[File.join(File.dirname(__FILE__), 'tasks', '**/*.rake')].each { |f| load f }
   end
+  ModalFields.enable if defined?(ActiveRecord::Base)
 end

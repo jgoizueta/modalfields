@@ -37,7 +37,7 @@ There's a couple of Rake tasks:
 
 Under Rails 2, you need to add this to your Rakefile to make the tasks available:
 
-  require 'modalfields'
+  require 'modalfields/tasks'
 
 == Some customization examples:
 

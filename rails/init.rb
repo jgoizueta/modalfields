@@ -1,2 +1,0 @@
-require 'modalfields'
-ModalFields.enable
