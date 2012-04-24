@@ -263,7 +263,10 @@ module ModalFields
       def diff(model)
         # model.columns will fail if the table does not exist
         existing_fields = model.columns rescue []
-        association_fields = model.reflect_on_all_associations(:belongs_to).map(&:primary_key_name).flatten.map(&:to_s)
+        # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; not itis foreign_key
+        association_fields = model.reflect_on_all_associations(:belongs_to).map{ |r|
+          r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key
+        }.flatten.map(&:to_s)
         pk_fields = Array(model.primary_key).map(&:to_s)
         case show_primary_keys
         when true
