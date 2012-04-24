@@ -303,11 +303,11 @@ module ModalFields
               attr_keys = attrs.keys
               decl_attrs = attr_keys.map{|a|
                 v = field_declaration.attributes[a]
-                v==attrs[a] ? nil : v
+                v==attrs[a] ? nil : (v==false ? nil : v)
               }
               col_attrs = attr_keys.map{|a|
                 v = column.attributes[a]
-                v==attrs[a] ? nil : v
+                v==attrs[a] ? nil : (v==false ? nil : v)
               }
               if decl_attrs == col_attrs
                 identical=true
