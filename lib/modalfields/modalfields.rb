@@ -290,7 +290,7 @@ module ModalFields
               existing_undeclared_fields << f
             end
           end
-          implicit_fields = (association_fields + pk_fields).reject{|name|
+          implicit_fields = association_fields.reject{|name|
             existing_declared_fields.detect{|df| df.name.to_s==name}
           }
           deleted_fields = declared_fields.reject{|f|
