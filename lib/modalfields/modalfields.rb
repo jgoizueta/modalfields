@@ -290,10 +290,14 @@ module ModalFields
               existing_undeclared_fields << f
             end
           end
+          implicit_fields = (association_fields + pk_fields).reject{|name|
+            existing_declared_fields.detect{|df| df.name.to_s==name}
+          }
           deleted_fields = declared_fields.reject{|f|
             name = f.name.to_s
             existing_declared_fields.detect{|df| df.name.to_s==name}
           }
+          deleted_fields += implicit_fields.map{|name| FieldDeclaration.new(name.to_sym, :integer, [], {}) }
           modified_fields = (declared_fields - deleted_fields).map{ |field_declaration|
             column = existing_declared_fields.detect{|f| f.name.to_s == field_declaration.name.to_s}
             identical = false
