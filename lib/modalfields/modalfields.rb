@@ -243,7 +243,7 @@ module ModalFields
               down << "  remove_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}\n"
             end
             modified_fields.each do |field|
-              changed = model.fields_info.find{|f| f.name==field.name}
+              changed = model.fields_info.find{|f| f.name.to_sym==field.name.to_sym}
               up << "  change_column #{model.table_name.to_sym.inspect}, #{changed.name.inspect}, #{changed.type.inspect}"
               unless changed.attributes.empty?
                 up << ", " + changed.attributes.inspect.unwrap('{}')
