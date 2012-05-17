@@ -232,7 +232,7 @@ module ModalFields
               up << "\n"
             end
             up << "  end\n"
-            down << " drop_table #{model.table_name.to_sym.inspect}\n"
+            down << "  drop_table #{model.table_name.to_sym.inspect}\n"
           else
             deleted_fields.each do |field|
               up << "  add_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}, #{field.type.inspect}"
