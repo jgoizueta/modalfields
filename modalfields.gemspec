@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "modalfields"
-  s.version = "1.1.5"
+  s.version = "1.1.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Javier Goizueta"]
@@ -32,6 +32,7 @@ Gem::Specification.new do |s|
     "lib/modalfields/tasks.rb",
     "lib/tasks/check.rake",
     "lib/tasks/migrate.rake",
+    "lib/tasks/migration.rake",
     "lib/tasks/update.rake",
     "modalfields.gemspec",
     "test/create_database.rb",
