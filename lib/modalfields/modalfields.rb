@@ -165,7 +165,7 @@ module ModalFields
     # changes can be easily reviewed.
     def update(modify=true)
       dbmodels.each do |model, file|
-        new_fields, modified_fields, deleted_fields = diff(model)
+        new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           pre, start_fields, fields, end_fields, post = split_model_file(file)
           deleted_names = deleted_fields.map{|f| f.name.to_s}
@@ -199,10 +199,11 @@ module ModalFields
 
     def check
       dbmodels.each do |model, file|
-        new_fields, modified_fields, deleted_fields = diff(model)
+        new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           rel_file = file.sub(/\A#{Rails.root}/,'')
           puts "#{model} (#{rel_file}):"
+          puts "  (deleted)" if deleted_model
           [['+',new_fields],['*',modified_fields],['-',deleted_fields]].each do |prefix, fields|
             puts fields.map{|field| "  #{prefix} #{field}"}*"\n" unless fields.empty?
             # TODO: report index differences
@@ -210,6 +211,71 @@ module ModalFields
           puts ""
         end
       end
+    end
+
+    def migration
+      up = ""
+      down = ""
+      dbmodels.each do |model, file|
+        new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
+        unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
+          up << "\n"
+          down << "\n"
+          rel_file = file.sub(/\A#{Rails.root}/,'')
+          if deleted_model && modified_fields.empty? && new_fields.empty?
+            up << "  create_table #{model.table_name.to_sym.inspect} do |t|\n"
+            deleted_fields.each do |field|
+              up << "    t.#{field.type} #{field.name.inspect}"
+              unless field.attributes.empty?
+                up << ", " + field.attributes.inspect.unwrap('{}')
+              end
+              up << "\n"
+            end
+            up << "  end\n"
+            down << " drop_table #{model.table_name.to_sym.inspect}\n"
+          else
+            deleted_fields.each do |field|
+              up << "  add_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}, #{field.type.inspect}"
+              unless field.attributes.empty?
+                up << ", " + field.attributes.inspect.unwrap('{}')
+              end
+              up << "\n"
+              down << "  remove_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}\n"
+            end
+            modified_fields.each do |field|
+              changed = model.fields_info.find{|f| f.name==field.name}
+              up << "  change_column #{model.table_name.to_sym.inspect}, #{changed.name.inspect}, #{changed.type.inspect}"
+              unless changed.attributes.empty?
+                up << ", " + changed.attributes.inspect.unwrap('{}')
+              end
+              up << "\n"
+              down << "  change_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}, #{field.type.inspect}"
+              unless field.attributes.empty?
+                down << ", " + field.attributes.inspect.unwrap('{}')
+              end
+              down << "\n"
+            end
+            new_fields.each do |field|
+              up << "  remove_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}\n"
+              down << "  add_column #{model.table_name.to_sym.inspect}, #{field.name.inspect}, #{field.type.inspect}"
+              unless field.attributes.empty?
+                down << ", " + field.attributes.inspect.unwrap('{}')
+              end
+              down << "\n"
+            end
+          end
+          # TODO: indices
+        end
+      end
+      unless up.blank?
+        puts "\n\# up:"
+        puts up
+      end
+      unless down.blank?
+        puts "\n\# down:"
+        puts down
+      end
+      puts ""
     end
 
     def validate(declaration)
@@ -263,6 +329,7 @@ module ModalFields
       def diff(model)
         # model.columns will fail if the table does not exist
         existing_fields = model.columns rescue []
+        deleted_model = existing_fields.empty?
         # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; not itis foreign_key
         association_fields = model.reflect_on_all_associations(:belongs_to).map{ |r|
           r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key
@@ -337,7 +404,7 @@ module ModalFields
           end
           FieldDeclaration.new(f.name.to_sym, f.type.to_sym, [], attributes)
         }
-        [new_fields, modified_fields, deleted_fields]
+        [new_fields, modified_fields, deleted_fields, deleted_model]
       end
 
       # Break up the lines of a model definition file into sections delimited by the fields declaration.
