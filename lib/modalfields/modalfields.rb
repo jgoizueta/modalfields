@@ -58,9 +58,9 @@ module ModalFields
   end
 
 
-  class DefinitionsDsl
+  class DefinitionsDsl < ActiveSupport::BasicObject
     def field(name, attributes={})
-      ModalFields.definitions[name.to_sym] = COMMON_ATTRIBUTES.merge(attributes)
+      ::ModalFields.definitions[name.to_sym] = COMMON_ATTRIBUTES.merge(attributes)
     end
     def method_missing(name, *args)
       field(name, *args)
