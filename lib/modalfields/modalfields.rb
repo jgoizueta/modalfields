@@ -332,7 +332,14 @@ module ModalFields
         deleted_model = existing_fields.empty?
         # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; not itis foreign_key
         association_fields = model.reflect_on_all_associations(:belongs_to).map{ |r|
-          r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key
+          cols = [r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key]
+          if r.options[:polymorphic]
+            t = r.options[:foreign_type]
+            t ||= r.foreign_type if r.respond_to?(:foreign_type)
+            t ||= cols.first.sub(/_id\Z/,'_type')
+            cols <<  t
+          end
+          cols
         }.flatten.map(&:to_s)
         pk_fields = Array(model.primary_key).map(&:to_s)
         case show_primary_keys
