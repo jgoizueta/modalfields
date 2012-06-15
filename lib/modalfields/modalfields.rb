@@ -18,6 +18,16 @@ module ModalFields
   SPECIFIERS = [:indexed, :unique, :required]
   COMMON_ATTRIBUTES = {:default=>nil, :null=>true}
 
+  if defined?(ActiveSupport::BasicObject) && ActiveSupport::BasicObject.instance_methods.map(&:to_sym).include?(:instance_eval)
+    DslBase = ActiveSupport::BasicObject
+  elsif defined?(BasicObject) && BasicObject.instance_methods.map(&:to_sym).include?(:instance_eval)
+    DslBase = BasicObject
+  else
+    class DslBase
+       instance_methods.each { |m| undef_method m unless m =~ /^(__|instance_eval)/ }
+     end
+  end
+
   class FieldDeclaration < Struct.new(:name, :type, :specifiers, :attributes)
 
     def self.declare(name, type, *args)
@@ -58,7 +68,7 @@ module ModalFields
   end
 
 
-  class DefinitionsDsl < ActiveSupport::BasicObject
+  class DefinitionsDsl < DslBase
     def field(name, attributes={})
       ::ModalFields.definitions[name.to_sym] = COMMON_ATTRIBUTES.merge(attributes)
     end
