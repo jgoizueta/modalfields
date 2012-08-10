@@ -94,7 +94,7 @@ module ModalFields
 
   class DeclarationsDsl
     def initialize(model)
-      @model = model
+      @model = model.base_class
     end
     def field(name, type, *args)
       declaration = FieldDeclaration.declare(name, type, *args)
