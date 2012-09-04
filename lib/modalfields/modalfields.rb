@@ -113,16 +113,26 @@ module ModalFields
   end
 
   module FieldDeclarationClassMethods
-    def fields(&blk)
-      @fields_info ||= []
-      unless self.respond_to?(:fields_info)
-        self.instance_eval do
-          def fields_info
-            @fields_info
+    def fields(param=nil, &blk)
+      if param == :omitted
+        unless self.respond_to?(:fields_info)
+          self.instance_eval do
+            def fields_info
+              :omitted
+            end
           end
         end
+      else
+        @fields_info ||= []
+        unless self.respond_to?(:fields_info)
+          self.instance_eval do
+            def fields_info
+              @fields_info
+            end
+          end
+        end
+        DeclarationsDsl.new(self).instance_eval(&blk)
       end
-      DeclarationsDsl.new(self).instance_eval(&blk)
     end
   end
 
@@ -358,6 +368,7 @@ module ModalFields
         end
         if model.respond_to?(:fields_info)
           declared_fields = model.fields_info
+          return [[]]*4 if declared_fields==:omitted
           indices = model.connection.indexes(model.table_name) # name, columns, unique, spatial
 
           existing_declared_fields = []
