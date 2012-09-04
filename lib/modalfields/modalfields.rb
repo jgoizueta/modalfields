@@ -90,7 +90,7 @@ module ModalFields
 
   class DeclarationsDsl < DslBase
     def initialize(model)
-      @model = model.base_class
+      @model = model
     end
     def field(name, type, *args)
       declaration = FieldDeclaration.declare(name, type, *args)
@@ -346,10 +346,11 @@ module ModalFields
         # model.columns will fail if the table does not exist
         existing_fields = model.columns rescue []
         deleted_model = existing_fields.empty?
-        # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; not itis foreign_key
+        submodels = model.send(:subclasses)
         assocs = model.reflect_on_all_associations(:belongs_to) +
-                 model.send(:subclasses).map{|sc| sc.reflect_on_all_associations(:belongs_to)}.flatten
+                 submodels.map{|sc| sc.reflect_on_all_associations(:belongs_to)}.flatten
         association_fields = assocs.map{ |r|
+          # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; now it's foreign_key
           cols = [r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key]
           if r.options[:polymorphic]
             t = r.options[:foreign_type]
@@ -369,8 +370,9 @@ module ModalFields
           pk_fields = pk_fields.select{|pk| pk=='id'}
         end
         if model.respond_to?(:fields_info)
-          declared_fields = model.fields_info
-          return [[]]*4 if declared_fields==:omitted
+          return [[]]*4 if model.fields_info==:omitted
+          declared_fields = model_fields_info(model)
+          declared_fields += submodels.map{|sc| Array(model_fields_info(sc))}.flatten
           indices = model.connection.indexes(model.table_name) # name, columns, unique, spatial
 
           existing_declared_fields = []
@@ -528,6 +530,11 @@ module ModalFields
       def unified_type(type)
         type &&= type.to_sym
         TYPE_SYNONYMS[type] || type
+      end
+
+      def model_fields_info(model)
+        fields_info = model && model.respond_to?(:fields_info) && model.fields_info
+        fields_info.kind_of?(Array) ? fields_info : nil
       end
 
     end
