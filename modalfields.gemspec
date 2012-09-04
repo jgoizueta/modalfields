@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = "modalfields"
-  s.version = "1.1.10"
+  s.name = %q{modalfields}
+  s.version = "1.1.11"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Javier Goizueta"]
-  s.date = "2012-08-10"
-  s.description = "ModelFields is a Rails plugin that adds fields declarations to your models."
-  s.email = "jgoizueta@gmail.com"
+  s.date = %q{2012-09-04}
+  s.description = %q{ModelFields is a Rails plugin that adds fields declarations to your models.}
+  s.email = %q{jgoizueta@gmail.com}
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc",
@@ -54,13 +54,14 @@ Gem::Specification.new do |s|
     "test/test_diff.rb",
     "test/test_update.rb"
   ]
-  s.homepage = "http://github.com/jgoizueta/modalfields"
+  s.homepage = %q{http://github.com/jgoizueta/modalfields}
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.23"
-  s.summary = "Model annotator with Ruby (Hobo-like) syntax and hooks."
+  s.rubygems_version = %q{1.3.7}
+  s.summary = %q{Model annotator with Ruby (Hobo-like) syntax and hooks.}
 
   if s.respond_to? :specification_version then
+    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
