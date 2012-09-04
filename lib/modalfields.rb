@@ -1,7 +1,7 @@
 require 'modalfields/modalfields'
 require 'modalfields/standardfields'
 
-if defined?(Rails)
+if defined?(Rails) && Rails.respond_to?(:version)
   if Rails.version.split('.').first.to_i > 2
     class BackupTask < Rails::Railtie
       rake_tasks do
