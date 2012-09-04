@@ -382,7 +382,7 @@ module ModalFields
             column = existing_declared_fields.detect{|f| f.name.to_s == field_declaration.name.to_s}
             identical = false
             column = map_column_to_field_declaration(column)
-            if field_declaration.type.to_sym == column.type.to_sym
+            if unified_type(field_declaration.type) == unified_type(column.type.to_sym)
               attrs = definitions[column.type.to_sym]
               attr_keys = attrs.keys
               decl_attrs = attr_keys.map{|a|
@@ -506,6 +506,15 @@ module ModalFields
           output.write end_fields
           output.write post*""
         }
+      end
+
+      TYPE_SYNONYMS = {
+        :timestamp => :datetime
+      }
+
+      def unified_type(type)
+        type &&= type.to_sym
+        TYPE_SYNONYMS[type] || type
       end
 
     end

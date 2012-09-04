@@ -1,8 +1,4 @@
-type synonyms (timestamp, datetime)
-
 process specifiers (to add validations for required, etc.)(detect index modifications) decide what to do with multiple-column indices
-
-refactor into multiple files
 
 add extensible specifiers:
   ModalFields.specify do
@@ -23,11 +19,3 @@ of extra attributes)
   status enum_field(:draft, :approved, :published), :required
 instead of
   status :enum_field, :required, :values=>[:draft, :approved, :published]
-
-Vendorized Installation:
-  Rails 2
-  script/plugin install git://github.com/jgoizueta/modalfields.git
-  Rails 3
-  rails plugin install git://github.com/jgoizueta/modalfields.git
-
-
