@@ -347,7 +347,9 @@ module ModalFields
         existing_fields = model.columns rescue []
         deleted_model = existing_fields.empty?
         # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; not itis foreign_key
-        association_fields = model.reflect_on_all_associations(:belongs_to).map{ |r|
+        assocs = model.reflect_on_all_associations(:belongs_to) +
+                 model.send(:subclasses).map{|sc| sc.reflect_on_all_associations(:belongs_to)}.flatten
+        association_fields = assocs.map{ |r|
           cols = [r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key]
           if r.options[:polymorphic]
             t = r.options[:foreign_type]
