@@ -18,14 +18,10 @@ module ModalFields
   SPECIFIERS = [:indexed, :unique, :required]
   COMMON_ATTRIBUTES = {:default=>nil, :null=>true}
 
-  if defined?(ActiveSupport::BasicObject) && ActiveSupport::BasicObject.instance_methods.map(&:to_sym).include?(:instance_eval)
-    DslBase = ActiveSupport::BasicObject
-  elsif defined?(BasicObject) && BasicObject.instance_methods.map(&:to_sym).include?(:instance_eval)
-    DslBase = BasicObject
-  else
-    class DslBase
-       instance_methods.each { |m| undef_method m unless m =~ /^(__|instance_eval)/ }
-     end
+  # We'll use a somewhat conservative kind of 'blank slate' base for DSLs. that
+  # works on Ruby 1.9 & 1.8
+  class DslBase
+    instance_methods.each { |m| undef_method m unless m =~ /^(__|instance_)/ }
   end
 
   class FieldDeclaration < Struct.new(:name, :type, :specifiers, :attributes)
@@ -70,14 +66,14 @@ module ModalFields
 
   class DefinitionsDsl < DslBase
     def field(name, attributes={})
-      ::ModalFields.definitions[name.to_sym] = COMMON_ATTRIBUTES.merge(attributes)
+      ModalFields.definitions[name.to_sym] = COMMON_ATTRIBUTES.merge(attributes)
     end
     def method_missing(name, *args)
       field(name, *args)
     end
   end
 
-  class HooksDsl
+  class HooksDsl < DslBase
     def field_type(type, &blk)
       ModalFields.hooks[type.to_sym] = lambda{|model, column_declaration|
         blk[model, column_declaration]
@@ -92,7 +88,7 @@ module ModalFields
     end
   end
 
-  class DeclarationsDsl
+  class DeclarationsDsl < DslBase
     def initialize(model)
       @model = model.base_class
     end
@@ -290,7 +286,7 @@ module ModalFields
 
     def validate(declaration)
       definition = definitions[declaration.type.to_sym]
-      raise "Field type #{declaration.type} not defined" unless definition
+      raise "Field type #{declaration.type} not defined (#{declaration.inspect})" unless definition
       # TODO: validate declaration.specifiers
       # TODO: validate declaration.attributes with definition
       true
