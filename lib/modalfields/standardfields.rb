@@ -11,3 +11,5 @@ ModalFields.define do
   binary :limit=>nil
   boolean
 end
+
+ModalFields.alias :timestamp=>:datetime

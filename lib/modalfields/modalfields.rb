@@ -140,6 +140,7 @@ module ModalFields
   @hooks = {}
   @definitions = {}
   @column_to_field_declaration_hook = nil
+  @type_aliases = {}
 
   class <<self
     attr_reader :hooks, :definitions
@@ -153,6 +154,11 @@ module ModalFields
     # Run a definition block that executes field type definitions
     def define(&blk)
       DefinitionsDsl.new.instance_eval(&blk)
+    end
+
+    # Define type synonyms
+    def alias(aliases)
+      @type_aliases.merge! aliases
     end
 
     # Run a hooks block that defines field declaration processors
@@ -523,13 +529,9 @@ module ModalFields
         }
       end
 
-      TYPE_SYNONYMS = {
-        :timestamp => :datetime
-      }
-
       def unified_type(type)
         type &&= type.to_sym
-        TYPE_SYNONYMS[type] || type
+        @type_aliases[type] || type
       end
 
       def model_fields_info(model)
