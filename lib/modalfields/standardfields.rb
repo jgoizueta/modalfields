@@ -10,6 +10,7 @@ ModalFields.define do
   date
   binary :limit=>nil
   boolean
+  timestamp
 end
 
 ModalFields.alias :timestamp=>:datetime
