@@ -187,6 +187,7 @@ module ModalFields
     # changes can be easily reviewed.
     def update(modify=true)
       dbmodels.each do |model, file|
+        next if file.nil?
         new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           pre, start_fields, fields, end_fields, post = split_model_file(file)
@@ -223,7 +224,7 @@ module ModalFields
       dbmodels.each do |model, file|
         new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
-          rel_file = file.sub(/\A#{Rails.root}/,'')
+          rel_file = file && file.sub(/\A#{Rails.root}/,'')
           puts "#{model} (#{rel_file}):"
           puts "  (deleted)" if deleted_model
           [['+',new_fields],['*',modified_fields],['-',deleted_fields]].each do |prefix, fields|
@@ -243,7 +244,7 @@ module ModalFields
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           up << "\n"
           down << "\n"
-          rel_file = file.sub(/\A#{Rails.root}/,'')
+          rel_file = file && file.sub(/\A#{Rails.root}/,'')
           if deleted_model && modified_fields.empty? && new_fields.empty?
             up << "  create_table #{model.table_name.to_sym.inspect} do |t|\n"
             deleted_fields.each do |field|
@@ -318,6 +319,7 @@ module ModalFields
                    .map{|f| [File.basename(f).chomp(".rb").camelize.constantize, f]}\
                    .select{|c,f| has_table(c)}\
                    .reject{|c,f| has_table(c.superclass)}
+        models += ActiveRecord::Base.send(:subclasses).reject{|c| c.name.starts_with?('CGI::') || !has_table(c) || has_table(c.superclass)}
         models.uniq
       end
 
