@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "modalfields"
-  s.version = "1.2.2"
+  s.version = "1.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Javier Goizueta"]
-  s.date = "2012-09-05"
+  s.date = "2012-09-06"
   s.description = "ModelFields is a Rails plugin that adds fields declarations to your models."
   s.email = "jgoizueta@gmail.com"
   s.extra_rdoc_files = [
@@ -64,6 +64,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<modalsettings>, [">= 0"])
       s.add_runtime_dependency(%q<activesupport>, [">= 2.3.5"])
       s.add_runtime_dependency(%q<activerecord>, [">= 2.3.5"])
       s.add_development_dependency(%q<shoulda>, [">= 0"])
@@ -74,6 +75,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<pg>, [">= 0"])
       s.add_runtime_dependency(%q<rails>, [">= 2.3.0"])
     else
+      s.add_dependency(%q<modalsettings>, [">= 0"])
       s.add_dependency(%q<activesupport>, [">= 2.3.5"])
       s.add_dependency(%q<activerecord>, [">= 2.3.5"])
       s.add_dependency(%q<shoulda>, [">= 0"])
@@ -85,6 +87,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rails>, [">= 2.3.0"])
     end
   else
+    s.add_dependency(%q<modalsettings>, [">= 0"])
     s.add_dependency(%q<activesupport>, [">= 2.3.5"])
     s.add_dependency(%q<activerecord>, [">= 2.3.5"])
     s.add_dependency(%q<shoulda>, [">= 0"])
