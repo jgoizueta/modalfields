@@ -1,3 +1,5 @@
+require 'modalsettings'
+
 # This is a hybrid between HoboFields and model annotators.
 #
 # It works like other annotators, by updating the model annotations from the DB schema.
@@ -62,7 +64,6 @@ module ModalFields
     end
 
   end
-
 
   class DefinitionsDsl < DslBase
     def field(name, attributes={})
@@ -141,8 +142,14 @@ module ModalFields
   @definitions = {}
   @column_to_field_declaration_hook = nil
   @type_aliases = {}
+  @parameters = Settings[
+    :check_all_models => false,     # consider all models (including those defined in plugins) for migration & check
+    :check_dynamic_models => false, # consider models that may have been defined dynamically not in model files
+    :update_vendor_models => false  # update also model files in vendor
+  ]
 
   class <<self
+
     attr_reader :hooks, :definitions
     # Define declaration of primary keys
     #   ModalFields.show_primary_keys = false # the default: do not show primary keys
@@ -150,6 +157,11 @@ module ModalFields
     #   ModalFields.show_primary_keys = :id   # only declare if named 'id' (otherwise the model will have a primary_key declaration)
     #   ModalFields.show_primary_keys = :except_id   # only declare if named differently from 'id'
     attr_accessor :show_primary_keys
+
+    def parameters(params=nil)
+      @parameters.merge! params if params
+      @parameters
+    end
 
     # Run a definition block that executes field type definitions
     def define(&blk)
@@ -186,7 +198,7 @@ module ModalFields
     # It is recommended to run this on a clearn working directory (no uncommitted changes), so that the
     # changes can be easily reviewed.
     def update(modify=true)
-      dbmodels.each do |model, file|
+      dbmodels(dbmodel_options).each do |model, file|
         next if file.nil?
         new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
@@ -221,7 +233,7 @@ module ModalFields
     end
 
     def check
-      dbmodels.each do |model, file|
+      dbmodels(dbmodel_options).each do |model, file|
         new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           rel_file = file && file.sub(/\A#{Rails.root}/,'')
@@ -239,7 +251,7 @@ module ModalFields
     def migration
       up = ""
       down = ""
-      dbmodels.each do |model, file|
+      dbmodels(dbmodel_options).each do |model, file|
         new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           up << "\n"
@@ -311,20 +323,84 @@ module ModalFields
 
     private
 
-      # return ActiveRecord classes corresponding to tables, without STI derived classes, but including indirectly
-      # derived classes that do have their own tables (to achieve this we use the convention that in such cases
-      # the base class, directly derived from ActiveRecord::Base has a nil table_name)
-      def dbmodels
-        models = Dir.glob(File.join(Rails.root,"app/models/**/*.rb"))\
-                   .map{|f| [File.basename(f).chomp(".rb").camelize.constantize, f]}\
-                   .select{|c,f| has_table(c)}\
-                   .reject{|c,f| has_table(c.superclass)}
-        models += ActiveRecord::Base.send(:subclasses).reject{|c| c.name.starts_with?('CGI::') || !has_table(c) || has_table(c.superclass)}
-        models.uniq
+      # Return the database models
+      # Options:
+      #   :all_models                # Return also models in plugins, not only in the app (app/models)
+      #   :dynamic_models            # Return dynamically defined models too (not defined in a model file)
+      #   :exclude_sti_models        # Exclude derived (STI) models
+      #   :exclude_non_sti_models    # Exclude top level models
+      #   :include_files             # Return also the model definition file pathnames (return pairs of [model, file])
+      #   :only_app_files            #   But return nil for files not in the app proper
+      #   :only_app_tree_files       #   But return nil for files not in the app directory tree (app, vendor...)
+      def dbmodels(options={})
+
+        models_dir = 'app/models'
+        if Rails.respond_to?(:application)
+          models_dir = Rails.application.paths[models_dir]
+        end
+        models_dir = Rails.root.join(models_dir)
+
+        if options[:all_models]
+          # Include also models from plugins
+          model_dirs = $:.grep(/\/models\/?\Z/)
+        else
+          # Only main application models
+          model_dirs = [models_dir]
+        end
+
+        models = []
+        files = {}
+        model_dirs.each do |base|
+          Dir.glob(File.join(base,"**/*.rb")).each do |fn|
+            model = File.basename(fn).chomp(".rb").camelize.constantize
+            models << model
+            files[model.to_s] = fn
+          end
+        end
+        models = models.sort_by{|m| m.to_s}
+
+        if options[:dynamic_models]
+          # Now add dynamically generated models (not having dedicated files)
+          # note that subclasses of these models are not added here
+          models += ActiveRecord::Base.send(:subclasses)
+          models = models.uniq
+        end
+
+        models = models.uniq.reject{|model| !has_table?(model)}
+
+        non_sti_models, sti_models = models.partition{|model| model.base_class==model}
+
+        models = []
+        models += non_sti_models unless options[:exclude_non_sti_models]
+        models += sti_models unless options[:exclude_sti_models]
+        if options[:include_files]
+          models = models.map{|model| [model, files[model.to_s]]}
+          if options[:only_app_files] || options[:only_app_tree_files]
+            if options[:only_app_files]
+              suffix = models_dir.to_s
+            else
+              suffix = Rails.root.to_s
+            end
+            suffix += '/' unless suffix.ends_with?('/')
+            models = models.map{|model, file| [model, file && (file.starts_with?(suffix) ? file : nil)]}
+          end
+        end
+        models
       end
 
-      def has_table(cls)
-        (cls!=ActiveRecord::Base) && cls.respond_to?(:table_name) && !cls.table_name.blank?
+      def has_table?(cls)
+       (cls != ActiveRecord::Base) && cls.respond_to?(:table_name) && cls.table_name.present?
+      end
+
+      def dbmodel_options
+        {
+          :all_models=>parameters.check_all_models,
+          :dynamic_models=>parameters.check_dynamic_models,
+          :exclude_sti_models=>true,
+          :include_files=>true,
+          :only_app_files=>!parameters.update_vendor_models,
+          :only_app_tree_files=>parameters.update_vendor_models
+        }
       end
 
       def map_column_to_field_declaration(column)

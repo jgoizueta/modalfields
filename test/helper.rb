@@ -29,7 +29,7 @@ ENV['RAILS_ROOT'] ||= File.dirname(__FILE__) # + '/../../../..'
 
 module Rails
   def self.root
-    ENV['RAILS_ROOT']
+    Pathname(ENV['RAILS_ROOT'])
   end
   def version
     ActiveRecord::VERSION::STRING
