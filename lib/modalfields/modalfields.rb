@@ -321,7 +321,114 @@ module ModalFields
       true
     end
 
+    def report(options={})
+      dbmodels(dbmodel_options).each do |model, file|
+        if options[:tables]
+          yield :table, model.table_name, nil, {:model=>model}
+        end
+
+        submodels = model.send(:subclasses)
+        existing_fields, association_fields, pk_fields = model_existing_fields(model, submodels)
+        unless file.nil?
+          pre, start_fields, fields, end_fields, post = split_model_file(file)
+        else
+        end
+
+        pks = pk_fields.map{|pk_field_name| existing_fields.find{|f| f.name==pk_field_name}}
+        existing_fields.reject!{|f| f.name.in? pk_fields}
+        if options[:primary_keys]
+          pks.each do |pk_field|
+            yield :primary_key, model.table_name, pk_field.name, field_data(pk_field)
+          end
+        end
+
+        assoc_cols = []
+        association_fields.each do |assoc, cols|
+          if options[:associations]
+            if assoc.options[:polymorphic]
+              foreign_table = :polymorphic
+            else
+              foreign_table = assoc.klass.table_name
+            end
+            yield :association, model.table_name, assoc.name, {:foreign_table=>foreign_table}
+          end
+          Array(cols).each do |col|
+            col = existing_fields.find{|f| f.name.to_s==col.to_s}
+            assoc_cols << col
+            if options[:foreign_keys]
+              yield :foreign_key, model.table_name, col.name, field_data(col, :assoc=>assoc)
+            end
+          end
+        end
+        existing_fields -= assoc_cols
+
+        fields = Array(fields).reject{|line, name, comment| name.blank?}
+        if model.respond_to?(:fields_info)
+          field_order = model.fields_info.map(&:name).map(&:to_s) & existing_fields.map(&:name)
+        else
+          field_order = []
+        end
+        if options[:undeclared_fields]
+          field_order += existing_fields.map(&:name).reject{|name| field_order.include?(name.to_s)}
+        end
+        field_comments = Hash[fields.map{|line, name, comment| [name,comment]}]
+        field_extras = Hash[ model.fields_info.map{|fi| [fi.name.to_s,fi.attributes]}]
+        field_order.each do |field_name|
+          field_info = existing_fields.find{|f| f.name.to_s==field_name}
+          field_comment = field_comments[field_name]
+          field_extra = field_extras[field_name]
+          if field_info.blank?
+            raise " MISSING FIELD: #{field_name} (#{model})"
+          else
+            yield :field, model.table_name, field_info.name, field_data(field_info, :comments=>field_comment, :extra=>field_extra)
+          end
+        end
+
+      end
+    end
+
     private
+
+      def field_data(field_info, options={})
+        comments = options[:comments]
+        extra = options[:extra]
+        assoc = options[:assoc]
+        attrs = [:type, :sql_type, :default, :null]
+        data = {}
+        if comments.present?
+          comments = comments.strip
+          comments = comments[1..-1] if comments.starts_with?('#')
+          comments = comments.strip
+        end
+        data[:comments] = comments if comments.present?
+        if assoc.present?
+          data[:foreign_name] = assoc.name
+          if assoc.options[:polymorphic]
+            data[:foreign_table] = :polymorphic
+          else
+            data[:foreign_table] = assoc.klass.table_name
+          end
+        end
+        # case field_info.type
+        # when :string, :text, :binary, :integer
+        #   attrs << :limit
+        # when :decimal
+        #   attrs << :scale << :precision
+        # when :geometry
+        #   attrs << :srid
+        # end
+        attrs += ModalFields.definitions[field_info.type].keys
+        attrs = attrs.uniq
+        if extra.present?
+          extra = extra.except(*attrs)
+        end
+        attrs.each do |attr|
+          v = field_info.send(attr)
+          data[attr] = v if v.present?
+        end
+        data[:extra] = extra if extra.present?
+        data
+      end
 
       # Return the database models
       # Options:
@@ -336,16 +443,16 @@ module ModalFields
 
         models_dir = 'app/models'
         if Rails.respond_to?(:application)
-          models_dir = Rails.application.paths[models_dir]
+          model_dirs = Rails.application.paths[models_dir]
+        else
+          model_dirs = [models_dir]
         end
         models_dir = Rails.root.join(models_dir)
+        model_dirs = model_dirs.map{|d| Rails.root.join(d)}
 
         if options[:all_models]
           # Include also models from plugins
           model_dirs = $:.grep(/\/models\/?\Z/)
-        else
-          # Only main application models
-          model_dirs = [models_dir]
         end
 
         models = []
@@ -427,24 +534,10 @@ module ModalFields
       #   declarations.
       # * deleted_fields are fields declared in the fields block but not present in the current schema.
       def diff(model)
-        # model.columns will fail if the table does not exist
-        existing_fields = model.columns rescue []
-        deleted_model = existing_fields.empty?
         submodels = model.send(:subclasses)
-        assocs = model.reflect_on_all_associations(:belongs_to) +
-                 submodels.map{|sc| sc.reflect_on_all_associations(:belongs_to)}.flatten
-        association_fields = assocs.map{ |r|
-          # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; now it's foreign_key
-          cols = [r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key]
-          if r.options[:polymorphic]
-            t = r.options[:foreign_type]
-            t ||= r.foreign_type if r.respond_to?(:foreign_type)
-            t ||= cols.first.sub(/_id\Z/,'_type')
-            cols <<  t
-          end
-          cols
-        }.flatten.map(&:to_s)
-        pk_fields = Array(model.primary_key).map(&:to_s)
+        existing_fields, association_fields, pk_fields = model_existing_fields(model, submodels)
+        association_fields = association_fields.map{|assoc_name, cols| cols}.flatten.map(&:to_s)
+        deleted_model = existing_fields.empty?
         case show_primary_keys
         when true
           pk_fields = []
@@ -615,6 +708,30 @@ module ModalFields
       def model_fields_info(model)
         fields_info = model && model.respond_to?(:fields_info) && model.fields_info
         fields_info.kind_of?(Array) ? fields_info : nil
+      end
+
+      # Returns three arrays:
+      # * array of existing fields (column info objects)
+      # * array of association fields: each element is the association information followed by the foreign key fields
+      # * array of primary key field names
+      def model_existing_fields(model, submodels=[])
+        # model.columns will fail if the table does not exist
+        existing_fields = model.columns rescue []
+        assocs = model.reflect_on_all_associations(:belongs_to) +
+                 submodels.map{|sc| sc.reflect_on_all_associations(:belongs_to)}.flatten
+        association_fields = assocs.map{ |r|
+          # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; now it's foreign_key
+          cols = [r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key]
+          if r.options[:polymorphic]
+            t = r.options[:foreign_type]
+            t ||= r.foreign_type if r.respond_to?(:foreign_type)
+            t ||= cols.first.sub(/_id\Z/,'_type')
+            cols <<  t
+          end
+          [r, cols]
+        }
+        pk_fields = Array(model.primary_key).map(&:to_s)
+        [existing_fields, association_fields, pk_fields]
       end
 
     end
