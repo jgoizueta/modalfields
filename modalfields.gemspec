@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "modalfields"
-  s.version = "1.3.0"
+  s.version = "1.4.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Javier Goizueta"]
-  s.date = "2012-09-06"
+  s.date = "2012-09-17"
   s.description = "ModelFields is a Rails plugin that adds fields declarations to your models."
   s.email = "jgoizueta@gmail.com"
   s.extra_rdoc_files = [
@@ -31,8 +31,10 @@ Gem::Specification.new do |s|
     "lib/modalfields/standardfields.rb",
     "lib/modalfields/tasks.rb",
     "lib/tasks/check.rake",
+    "lib/tasks/csv.rake",
     "lib/tasks/migrate.rake",
     "lib/tasks/migration.rake",
+    "lib/tasks/report.rake",
     "lib/tasks/update.rake",
     "modalfields.gemspec",
     "test/create_database.rb",
