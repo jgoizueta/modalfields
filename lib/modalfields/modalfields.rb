@@ -322,7 +322,9 @@ module ModalFields
     end
 
     def report(options={})
-      dbmodels(dbmodel_options).each do |model, file|
+      models = Array(options[:model])
+      models = dbmodels(dbmodel_options) if models.blank?
+      models(dbmodel_options).each do |model, file|
         if options[:tables]
           yield :table, model.table_name, nil, {:model=>model}
         end
@@ -385,6 +387,10 @@ module ModalFields
         end
 
       end
+    end
+
+    def models(options=nil)
+      dbmodels options || dbmodel_options
     end
 
     private
