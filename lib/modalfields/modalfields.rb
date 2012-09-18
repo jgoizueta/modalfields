@@ -337,7 +337,7 @@ module ModalFields
         end
 
         pks = pk_fields.map{|pk_field_name| existing_fields.find{|f| f.name==pk_field_name}}
-        existing_fields.reject!{|f| f.name.in? pk_fields}
+        existing_fields = existing_fields.reject{|f| f.name.in? pk_fields}
         if options[:primary_keys]
           pks.each do |pk_field|
             yield :primary_key, model.table_name, pk_field.name, field_data(pk_field)
