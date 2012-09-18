@@ -324,7 +324,7 @@ module ModalFields
     def report(options={})
       models = Array(options[:model])
       models = dbmodels(dbmodel_options) if models.blank?
-      models(dbmodel_options).each do |model, file|
+      models.each do |model, file|
         if options[:tables]
           yield :table, model.table_name, nil, {:model=>model}
         end
