@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "modalfields"
-  s.version = "1.4.1"
+  s.version = "1.4.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Javier Goizueta"]
-  s.date = "2012-09-17"
+  s.date = "2012-09-18"
   s.description = "ModelFields is a Rails plugin that adds fields declarations to your models."
   s.email = "jgoizueta@gmail.com"
   s.extra_rdoc_files = [
