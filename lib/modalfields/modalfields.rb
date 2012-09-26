@@ -105,6 +105,9 @@ module ModalFields
         if declaration.specifiers.include?(:unique)
           @model.validates_uniqueness_of declaration.name
         end
+        if declaration.specifiers.include?(:required)
+          @model.validates_presence_of declaration.name
+        end
       end
     end
     def timestamps
