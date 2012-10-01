@@ -370,8 +370,9 @@ module ModalFields
         end
         existing_fields -= assoc_cols
 
+        has_fields_info = model.respond_to?(:fields_info) && model.fields_info != :omitted
         fields = Array(fields).reject{|line, name, comment| name.blank?}
-        if model.respond_to?(:fields_info)
+        if has_fields_info
           field_order = model.fields_info.map(&:name).map(&:to_s) & existing_fields.map(&:name)
         else
           field_order = []
@@ -380,7 +381,7 @@ module ModalFields
           field_order += existing_fields.map(&:name).reject{|name| field_order.include?(name.to_s)}
         end
         field_comments = Hash[fields.map{|line, name, comment| [name,comment]}]
-        field_extras = Hash[ model.fields_info.map{|fi| [fi.name.to_s,fi.attributes]}]
+        field_extras = has_fields_info ? Hash[ model.fields_info.map{|fi| [fi.name.to_s,fi.attributes]}] : {}
         field_order.each do |field_name|
           field_info = existing_fields.find{|f| f.name.to_s==field_name}
           field_comment = field_comments[field_name]
