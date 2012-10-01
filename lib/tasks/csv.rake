@@ -16,7 +16,7 @@ namespace :fields do
     CSV.open(fn, 'w', *options) do |csv|
         csv << %w{table column pk assoc foreign sql_type type attributes extra comments}
         ModalFields.report(
-          :primary_keys=>true, :foreing_keys=>true,
+          :primary_keys=>true, :foreign_keys=>true,
           :undeclared_fields=>true) do |kind, table, name, data|
             row_data = [table, name, kind==:primary_key]
             if kind==:foreign_key
