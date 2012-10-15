@@ -732,7 +732,7 @@ module ModalFields
         existing_fields = model.columns rescue []
         assocs = model.reflect_on_all_associations(:belongs_to) +
                  submodels.map{|sc| sc.reflect_on_all_associations(:belongs_to)}.flatten
-        association_fields = assocs.map{ |r|
+        association_fields = assocs.uniq.map{ |r|
           # up to ActiveRecord 3.1 we had primary_key_name in AssociationReflection; now it's foreign_key
           cols = [r.respond_to?(:primary_key_name) ? r.primary_key_name : r.foreign_key]
           if r.options[:polymorphic]
