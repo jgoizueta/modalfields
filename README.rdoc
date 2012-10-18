@@ -22,11 +22,6 @@ is readily available.
 
 Primary keys named are also not annotated (unless the ModalFields.show_primary_keys property is changed)
 
-The annotations are kept up to date by the migration tasks (currently only if the plugin is installed under vendor)
-Comments and validation, etc. specifications modified manually are preserved, at least
-if the field block syntax is kept as generated (one line per field, one line for the
-block start and end...)
-
 Custom type fields and hooks can be define in files (e.g. fields.rb) in config/initializers/
 
 == Rake Tasks
@@ -38,6 +33,31 @@ There's a couple of Rake tasks:
 Under Rails 2, you need to add this to your Rakefile to make the tasks available:
 
   require 'modalfields/tasks'
+
+== Use Scenarios
+
+There are two basic alternative strategies:
+
+=== Define schema modifications with migrations first
+
+To help with this strategy, the rake fields:update task can be made to be automatically called after each migration.
+
+To activate this functionality, this must be added to your Rakefile:
+
+  require 'modalfields/migrate_tasks'
+
+To alter the DB schema migrations are prepared; when the migrations are executed the field
+declarations are automatically updated. Further customization of the field declarations can be
+done before committing the changes.
+
+Comments and validation, etc. specifications modified manually are preserved, at least
+if the field block syntax is kept as generated (one line per field, one line for the
+block start and end...)
+
+=== Maintain schema via field declarations
+
+If the preferred strategy is to define changes in the field declarations,
+rake fields:migration can be used to help write the necessary migration.
 
 == Some customization examples:
 
