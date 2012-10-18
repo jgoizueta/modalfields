@@ -102,11 +102,13 @@ module ModalFields
       end
       if ModalFields.validate(declaration)
         @model.fields_info << declaration
-        if declaration.specifiers.include?(:unique)
-          @model.validates_uniqueness_of declaration.name
-        end
-        if declaration.specifiers.include?(:required)
-          @model.validates_presence_of declaration.name
+        if @model.columns.detect{|c| c.name==declaration.name.to_s}
+          if declaration.specifiers.include?(:unique)
+            @model.validates_uniqueness_of declaration.name
+          end
+          if declaration.specifiers.include?(:required)
+            @model.validates_presence_of declaration.name
+          end
         end
       end
     end
