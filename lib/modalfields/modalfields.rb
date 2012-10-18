@@ -208,6 +208,7 @@ module ModalFields
     def update(modify=true)
       dbmodels(dbmodel_options).each do |model, file|
         next if file.nil?
+        model.reset_column_information
         new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           pre, start_fields, fields, end_fields, post = split_model_file(file)
