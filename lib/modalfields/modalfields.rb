@@ -80,7 +80,12 @@ module ModalFields
         blk[model, column_declaration]
       }
     end
-    # geric filter applied to all the fields (after a specific filter for the type, if there is one)
+    def field_migration(type, &blk)
+      ModalFields.migration_hooks[type.to_sym] = lambda{|model, column_declaration|
+        blk[model, column_declaration]
+      }
+    end
+    # generic filter applied to all the fields (after a specific filter for the type, if there is one)
     def all_fields(&blk)
       field_type :all_fields, &blk
     end
@@ -147,6 +152,7 @@ module ModalFields
 
   @show_primary_keys = false
   @hooks = {}
+  @migration_hooks = {}
   @definitions = {}
   @column_to_field_declaration_hook = nil
   @type_aliases = {}
@@ -158,7 +164,7 @@ module ModalFields
 
   class <<self
 
-    attr_reader :hooks, :definitions
+    attr_reader :hooks, :migration_hooks, :definitions
     # Define declaration of primary keys
     #   ModalFields.show_primary_keys = false # the default: do not show primary keys
     #   ModalFields.show_primary_keys = true  # always declare primary keys
@@ -261,7 +267,9 @@ module ModalFields
       up = ""
       down = ""
       dbmodels(dbmodel_options).each do |model, file|
-        new_fields, modified_fields, deleted_fields, deleted_model = diff(model)
+        new_fields, modified_fields, deleted_fields, deleted_model = diff(model).map{|fields|
+          fields.kind_of?(Array) ? fields.map{|f| migration_declaration(model, f)} : fields
+        }
         unless new_fields.empty? && modified_fields.empty? && deleted_fields.empty?
           up << "\n"
           down << "\n"
@@ -288,6 +296,7 @@ module ModalFields
             end
             modified_fields.each do |field|
               changed = model.fields_info.find{|f| f.name.to_sym==field.name.to_sym}
+              changed &&= migration_declaration(model, changed)
               up << "  change_column #{model.table_name.to_sym.inspect}, #{changed.name.inspect}, #{changed.type.inspect}"
               unless changed.attributes.empty?
                 up << ", " + changed.attributes.inspect.unwrap('{}')
@@ -355,6 +364,7 @@ module ModalFields
 
         assoc_cols = []
         association_fields.each do |assoc, cols|
+
           if options[:associations]
             if assoc.options[:polymorphic]
               foreign_table = :polymorphic
@@ -404,6 +414,12 @@ module ModalFields
     end
 
     private
+
+      def migration_declaration(model, field_declaration)
+        hook = ModalFields.migration_hooks[field_declaration.type.to_sym]
+        hook[model, field_declaration] if hook
+        field_declaration
+      end
 
       def field_data(field_info, options={})
         comments = options[:comments]
