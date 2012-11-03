@@ -375,6 +375,7 @@ module ModalFields
           end
           Array(cols).each do |col|
             col = existing_fields.find{|f| f.name.to_s==col.to_s}
+            next unless col
             assoc_cols << col
             if options[:foreign_keys]
               yield :foreign_key, model.table_name, col.name, field_data(col, :assoc=>assoc)
