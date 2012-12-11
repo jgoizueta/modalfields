@@ -23,7 +23,7 @@ module ModalFields
   # We'll use a somewhat conservative kind of 'blank slate' base for DSLs. that
   # works on Ruby 1.9 & 1.8
   class DslBase
-    instance_methods.each { |m| undef_method m unless m =~ /^(__|instance_)/ }
+    instance_methods.each { |m| undef_method m unless m =~ /^(__|instance_|object_id)/ }
   end
 
   class FieldDeclaration < Struct.new(:name, :type, :specifiers, :attributes)
