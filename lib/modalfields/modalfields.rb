@@ -30,6 +30,8 @@ module ModalFields
 
     def self.declare(name, type, *args)
       attributes = args.extract_options!
+      required = attributes.delete(:required)
+      args << :required if required
       new(name, type, args, attributes)
     end
 
