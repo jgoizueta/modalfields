@@ -493,7 +493,9 @@ module ModalFields
         models = []
         files = {}
         model_dirs.each do |base|
-          Dir.glob(File.join(base,"**/*.rb")).each do |fn|
+          # TODO: look also in subdirectories ('**/*.rb') but then
+          # the relative path must be used to qualify the constant name (/x/y.rb => X::Y)
+          Dir.glob(File.join(base,"*.rb")).each do |fn|
             model = File.basename(fn).chomp(".rb").camelize.constantize
             models << model
             files[model.to_s] = fn
