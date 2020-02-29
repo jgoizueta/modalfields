@@ -25,7 +25,7 @@ GEM
       modalsupport (>= 0.8.1)
     modalsupport (0.9.2)
     pg (0.10.1)
-    rake (0.9.2.2)
+    rake (13.0.1)
     rdoc (3.12)
       json (~> 1.4)
     shoulda (2.10.3)
